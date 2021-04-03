@@ -64,7 +64,8 @@ const char *fragmentSource = R"(
 				if (i == j) continue;
 				vec3 p11, n;
 				getObjPlane(j, scale, p11, n);
-				if (dot(n, pintersect p11) > 0) {
+
+				if (dot(n, pintersect - p11) > 0) {
 					outside = true;
 					break;
 				}
@@ -165,8 +166,6 @@ const char *fragmentSource = R"(
 )";
 
 GPUProgram gpuProgram; // vertex and fragment shaders
-unsigned int vao;	   // virtual world on the GPU
-
 
 struct Camera {
 	vec3 eye, lookat, right, pvup, rvup;
@@ -204,17 +203,17 @@ void onInitialization() {
 	unsigned int vao, vbo;
 	glGenVertexArrays(1, &vao); glBindVertexArray(vao);
 	glGenBuffers(1, &vbo);		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	float vertexCoords[] = { -1, -1, 1, -1, 1, 1, -1, 1 };
+	float vertexCoords[] = { -1, -1,	 1, -1,		1, 1,	 -1, 1 };
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexCoords), vertexCoords, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	shader.create(vertexSource, fragmentSource, "fragmentColor");
 	shader.setUniform(1, "top");
 
-	const float g = 0.618f, G = 1.618f;
+	const float g = 0.6f, G = 1.6f;
 	std::vector<vec3> v = {
-		vec3(0, g, G), vec3(0, -g, G), vec3(0, -g, -G), vec3(0, g, -G), vec3(G, 0, g), vec3(-G, 0, g), vec3(-G, 0, -g), vec3(G, 0, -g),
-		vec3(-g, -G, 0), vec3(g, -G, 0), vec3(1, 1, 1), vec3(-1, 1, 1), vec3(-1, -1, 1), vec3(1, -1, -1), vec3(-1, -1, -1)
+		vec3(0, g, G), vec3(0, -g, G), vec3(0, -g, -G), vec3(0, g, -G), vec3(G, 0, g), vec3(-G, 0, g), vec3(-G, 0, -g), vec3(G, 0, -g), vec3(g, G , 0), vec3(-g, G, 0),
+		vec3(-g, -G, 0), vec3(g, -G, 0), vec3(1, 1, 1), vec3(-1, 1, 1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(1, -1, -1), vec3(1, 1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1)
 	};
 
 	for (int i = 0; i < v.size(); i++) shader.setUniform(v[i], "v[" + std::to_string(i) + "]");
