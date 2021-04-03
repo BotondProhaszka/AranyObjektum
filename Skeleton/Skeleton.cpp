@@ -33,7 +33,7 @@
 //=============================================================================================
 #include "framework.h"
 
-const char * const vertexSource = R"(
+const char *vertexSource = R"(
 	#version 330
 	precision highp float;
 
@@ -48,7 +48,7 @@ const char * const vertexSource = R"(
 )";
 
 // fragment shader in GLSL
-const char * const fragmentSource = R"(
+const char *fragmentSource = R"(
 	#version 330			// Shader 3.3
 	precision highp float;	// normal floats, makes no difference on desktop computers
 	
@@ -62,7 +62,7 @@ const char * const fragmentSource = R"(
 	
 	struct Hit {
 		float t;
-		vec3 positio, normal;
+		vec3 position, normal;
 		int mat;
 	};
 
@@ -81,14 +81,70 @@ const char * const fragmentSource = R"(
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
 		
+	Hit intersectConvexPolyhedron(Ray ray, Hit hit, float scale, int mat) {
+		for(int i = 0; i < objFaces; i++) {
+			vec3 p1, normal;
+			getObjPlane(i, scale, p1, normal);
+			float ti = abs(dot(normal, ray.dir)) > epsilon ? dot(p1 - ray.start, normal) / dot(normal, ray.dir) : -1;
+			if (ti <= epsilon || (ti > hit.t && hit.t > 0)) continue;
+			vec3 pintersect = ray.start + ray.dir * ti;
+			bool outside = false;
+			for(int j = 0; j < objFaces; j++) {
+				if (i == j) continue;
+				vec3 p11, n;
+				getObjPlane(j, scale, p11, n);
+				if (dot(n, pintersect p11) > 0) {
+					outside = true;
+					break;
+				}
+			}
+			if (!outside) {
+				hit.t = ti;
+				hit.position = pintersect;
+				hit.normal = normalize(normal);
+				hit.mat = mat;
+			}
+		}
+		return hit;
+	}
+
+
+	
+	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float zmin, float zmax, float normz){
+		float discr = b * b - 4.0f * a * c;
+		if(discr >= 0){
+			float sqrt_discr = sqrt(discr);
+			float t1 = (-b + sqrt_discr) / 2.0f / a;
+			vec3 p = ray.start + ray.dir * t1;
+			if(p.z > zmax || p.z < zmin) t1 = -1;
+			float t2 = (-b - sqrt_discr) / 2.0f / a;
+			p = ray.start + ray.dir * t2;
+			if(p.z > zmax || p.z < zmin) t2 = -1;
+			if(t2 > 0 && (t2 < t1 || t1 < 0)) {
+				hit.t = t1;
+				hit.position = ray.start + ray.dir * hit.t;
+				hit.normal = normalize(vec3(-hit.position.x, -hit.position.y, normz));
+				hit.mat = 2;
+			}
+		}
+		return hit;
+	}
+
+
 	Hit intersectMirascope(Ray ray, Hit hit) {
 		const float f = 0.25f;
 		const float H = 0.98f * f;
 
-
-
-
-
+		float a = dot(ray.dir.xy, ray.dir.xy);
+		float b = dot(ray.dir.xy, ray.start.xy) * 2 - 4 * f * ray.dir.z;
+		float c = dot(ray.start.xy, ray.start.xy) - 4 * f * ray.start.z;
+		hit = solveQuadratic(a, b, c, ray, hit, 0, f/2, 2 * f);
+		if(top == 0) return hit;
+		b += 8 * f * ray.dir.z;
+		c += 8 * f * ray.start.z - 4 * f * f;
+		hit = solveQuadratic(a, b, c, ray, hit, f/2, H, -2 * f);
+		return hit;
+	}
 
 	Hit firstIntersect(Ray ray) {
 		Hit bestHit;
@@ -165,8 +221,9 @@ struct Camera {
 
 
 
-
-
+GPUProgram shader;
+Camera camera;
+bool animate = true;
 float F(float n, float k) { return ((n - 1) * (n - 1) + k * k) / ((n + 1) * (n + 1) + k * k); }
 
 // Initialization, create an OpenGL context
