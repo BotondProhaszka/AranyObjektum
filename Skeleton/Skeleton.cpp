@@ -1,7 +1,6 @@
 
 
 
-
 #include "framework.h"
 
 const char *vertexSource = R"(
@@ -79,8 +78,6 @@ const char *fragmentSource = R"(
 		}
 		return hit;
 	}
-
-
 	
 	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float zmin, float zmax, float normz){
 		float discr = b * b - 4.0f * a * c;
@@ -92,7 +89,8 @@ const char *fragmentSource = R"(
 			float t2 = (-b - sqrt_discr) / 2.0f / a;
 			p = ray.start + ray.dir * t2;
 			if(p.z > zmax || p.z < zmin) t2 = -1;
-			if(t2 > 0 && (t2 < t1 || t1 < 0)) {
+			if(t2 > 0 && (t2 < t1 || t1 < 0) t1 = t2;
+			if(t1 > 0 && (t1 < hit.t || hit.t < 0)) {
 				hit.t = t1;
 				hit.position = ray.start + ray.dir * hit.t;
 				hit.normal = normalize(vec3(-hit.position.x, -hit.position.y, normz));
@@ -101,7 +99,6 @@ const char *fragmentSource = R"(
 		}
 		return hit;
 	}
-
 
 	Hit intersectMirascope(Ray ray, Hit hit) {
 		const float f = 0.25f;
@@ -132,20 +129,21 @@ const char *fragmentSource = R"(
 		vec3 outRadiance = vec3(0, 0, 0);
 		for(int d = 0; d < maxdepth; d++) {
 			Hit hit = firstIntersect(ray);
-			if(hit.t < 0) break;
-			if(hit.mat < 2) {
+			if (hit.t < 0) break;
+			if (hit.mat < 2) {
 				vec3 lightdir = normalize(lightPosition - hit.position);
-				float cosTheta = dot(hit.normal, lightdir); 
-				if(cosTheta > 0) {
+				float cosTheta = dot(hit.normal, lightdir);
+				if (cosTheta > 0) {
 					vec3 LeIn = Le / dot(lightPosition - hit.position, lightPosition - hit.position);
 					outRadiance += ray.weight * LeIn * kd[hit.mat] * cosTheta;
 					vec3 halfway = normalize(-ray.dir + lightdir);
 					float cosDelta = dot(hit.normal, halfway);
-					if(cosDelta > 0) outRadiance += ray.weight * LeIn * ks[hit.mat] * pow(cosDelta, shininess);
+					if (cosDelta > 0) outRadiance += ray.weight * LeIn * ks[hit.mat] * pow(cosDelta, shininess);
 				}
 				ray.weight *= ka;
 				break;
 			}
+			// mirror reflection
 			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(dot(-ray.dir, hit.normal), 5);
 			ray.start = hit.position + hit.normal * epsilon;
 			ray.dir = reflect(ray.dir, hit.normal);
@@ -154,8 +152,6 @@ const char *fragmentSource = R"(
 		return outRadiance;
 	}
 
-
-	
 	in vec3 p;
 	out vec4 fragmentColor;
 
