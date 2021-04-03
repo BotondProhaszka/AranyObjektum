@@ -1,36 +1,7 @@
-//=============================================================================================
-// Mintaprogram: Zöld háromszög. Ervenyes 2019. osztol.
-//
-// A beadott program csak ebben a fajlban lehet, a fajl 1 byte-os ASCII karaktereket tartalmazhat, BOM kihuzando.
-// Tilos:
-// - mast "beincludolni", illetve mas konyvtarat hasznalni
-// - faljmuveleteket vegezni a printf-et kiveve
-// - Mashonnan atvett programresszleteket forrasmegjeloles nelkul felhasznalni es
-// - felesleges programsorokat a beadott programban hagyni!!!!!!! 
-// - felesleges kommenteket a beadott programba irni a forrasmegjelolest kommentjeit kiveve
-// ---------------------------------------------------------------------------------------------
-// A feladatot ANSI C++ nyelvu forditoprogrammal ellenorizzuk, a Visual Studio-hoz kepesti elteresekrol
-// es a leggyakoribb hibakrol (pl. ideiglenes objektumot nem lehet referencia tipusnak ertekul adni)
-// a hazibeado portal ad egy osszefoglalot.
-// ---------------------------------------------------------------------------------------------
-// A feladatmegoldasokban csak olyan OpenGL fuggvenyek hasznalhatok, amelyek az oran a feladatkiadasig elhangzottak 
-// A keretben nem szereplo GLUT fuggvenyek tiltottak.
-//
-// NYILATKOZAT
-// ---------------------------------------------------------------------------------------------
-// Nev    : Prohászka Botond Bendegúz
-// Neptun : DG1647
-// ---------------------------------------------------------------------------------------------
-// ezennel kijelentem, hogy a feladatot magam keszitettem, es ha barmilyen segitseget igenybe vettem vagy
-// mas szellemi termeket felhasznaltam, akkor a forrast es az atvett reszt kommentekben egyertelmuen jeloltem.
-// A forrasmegjeloles kotelme vonatkozik az eloadas foliakat es a targy oktatoi, illetve a
-// grafhazi doktor tanacsait kiveve barmilyen csatornan (szoban, irasban, Interneten, stb.) erkezo minden egyeb
-// informaciora (keplet, program, algoritmus, stb.). Kijelentem, hogy a forrasmegjelolessel atvett reszeket is ertem,
-// azok helyessegere matematikai bizonyitast tudok adni. Tisztaban vagyok azzal, hogy az atvett reszek nem szamitanak
-// a sajat kontribucioba, igy a feladat elfogadasarol a tobbi resz mennyisege es minosege alapjan szuletik dontes.
-// Tudomasul veszem, hogy a forrasmegjeloles kotelmenek megsertese eseten a hazifeladatra adhato pontokat
-// negativ elojellel szamoljak el es ezzel parhuzamosan eljaras is indul velem szemben.
-//=============================================================================================
+
+
+
+
 #include "framework.h"
 
 const char *vertexSource = R"(
@@ -47,10 +18,9 @@ const char *vertexSource = R"(
 	}
 )";
 
-// fragment shader in GLSL
 const char *fragmentSource = R"(
-	#version 330			// Shader 3.3
-	precision highp float;	// normal floats, makes no difference on desktop computers
+	#version 330
+	precision highp float;
 	
 	const vec3 La = vec3(0.5f, 0.6f, 0.6f);
 	const vec3 Le = vec3(0.8f, 0.8f, 0.8f);
@@ -68,7 +38,7 @@ const char *fragmentSource = R"(
 
 	struct Ray {
 		vec3 start, dir, weight;
-	}
+	};
 
 	const int objFaces = 12;
 	uniform int top;
@@ -80,6 +50,8 @@ const char *fragmentSource = R"(
 		vec3 p1 = v[planes[3 * i] - 1], p2 = v[planes[3 * i + 1] - 1], p3 = v[planes[3 * i + 2] -1];
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
+		p = p1 * scale + vec3(0, 0, 0.03f);
+	}
 		
 	Hit intersectConvexPolyhedron(Ray ray, Hit hit, float scale, int mat) {
 		for(int i = 0; i < objFaces; i++) {
@@ -163,7 +135,8 @@ const char *fragmentSource = R"(
 			if(hit.t < 0) break;
 			if(hit.mat < 2) {
 				vec3 lightdir = normalize(lightPosition - hit.position);
-				float cosTheta > 0) {
+				float cosTheta = dot(hit.normal, lightdir); 
+				if(cosTheta > 0) {
 					vec3 LeIn = Le / dot(lightPosition - hit.position, lightPosition - hit.position);
 					outRadiance += ray.weight * LeIn * kd[hit.mat] * cosTheta;
 					vec3 halfway = normalize(-ray.dir + lightdir);
@@ -173,14 +146,16 @@ const char *fragmentSource = R"(
 				ray.weight *= ka;
 				break;
 			}
-		ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(dot(-ray.dir, hit.normal), 5);
-		ray.start = hit.position + hit.normal * epsilon;
-		ray.dir = reflect(ray.dir, hit.normal);
+			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(dot(-ray.dir, hit.normal), 5);
+			ray.start = hit.position + hit.normal * epsilon;
+			ray.dir = reflect(ray.dir, hit.normal);
+		}
+		outRadiance += ray.weight * La;
+		return outRadiance;
 	}
-	outRadiance += ray.weight * La;
-	return outRadiance;
 
 
+	
 	in vec3 p;
 	out vec4 fragmentColor;
 
@@ -290,3 +265,37 @@ void onIdle() {
 	if (animate) camera.Animate(glutGet(GLUT_ELAPSED_TIME) / 1000.0f);
 	glutPostRedisplay();
 }
+
+//=============================================================================================
+// Mintaprogram: Zöld háromszög. Ervenyes 2019. osztol.
+//
+// A beadott program csak ebben a fajlban lehet, a fajl 1 byte-os ASCII karaktereket tartalmazhat, BOM kihuzando.
+// Tilos:
+// - mast "beincludolni", illetve mas konyvtarat hasznalni
+// - faljmuveleteket vegezni a printf-et kiveve
+// - Mashonnan atvett programresszleteket forrasmegjeloles nelkul felhasznalni es
+// - felesleges programsorokat a beadott programban hagyni!!!!!!! 
+// - felesleges kommenteket a beadott programba irni a forrasmegjelolest kommentjeit kiveve
+// ---------------------------------------------------------------------------------------------
+// A feladatot ANSI C++ nyelvu forditoprogrammal ellenorizzuk, a Visual Studio-hoz kepesti elteresekrol
+// es a leggyakoribb hibakrol (pl. ideiglenes objektumot nem lehet referencia tipusnak ertekul adni)
+// a hazibeado portal ad egy osszefoglalot.
+// ---------------------------------------------------------------------------------------------
+// A feladatmegoldasokban csak olyan OpenGL fuggvenyek hasznalhatok, amelyek az oran a feladatkiadasig elhangzottak 
+// A keretben nem szereplo GLUT fuggvenyek tiltottak.
+//
+// NYILATKOZAT
+// ---------------------------------------------------------------------------------------------
+// Nev    : Prohászka Botond Bendegúz
+// Neptun : DG1647
+// ---------------------------------------------------------------------------------------------
+// ezennel kijelentem, hogy a feladatot magam keszitettem, es ha barmilyen segitseget igenybe vettem vagy
+// mas szellemi termeket felhasznaltam, akkor a forrast es az atvett reszt kommentekben egyertelmuen jeloltem.
+// A forrasmegjeloles kotelme vonatkozik az eloadas foliakat es a targy oktatoi, illetve a
+// grafhazi doktor tanacsait kiveve barmilyen csatornan (szoban, irasban, Interneten, stb.) erkezo minden egyeb
+// informaciora (keplet, program, algoritmus, stb.). Kijelentem, hogy a forrasmegjelolessel atvett reszeket is ertem,
+// azok helyessegere matematikai bizonyitast tudok adni. Tisztaban vagyok azzal, hogy az atvett reszek nem szamitanak
+// a sajat kontribucioba, igy a feladat elfogadasarol a tobbi resz mennyisege es minosege alapjan szuletik dontes.
+// Tudomasul veszem, hogy a forrasmegjeloles kotelmenek megsertese eseten a hazifeladatra adhato pontokat
+// negativ elojellel szamoljak el es ezzel parhuzamosan eljaras is indul velem szemben.
+//=============================================================================================
