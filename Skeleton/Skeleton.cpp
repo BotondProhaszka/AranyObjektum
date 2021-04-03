@@ -45,7 +45,7 @@ const char *fragmentSource = R"(
 	uniform int planes[objFaces * 3];
 	uniform vec3 kd[2], ks[2], F0;
 
-	void getObjPlane(int i, float scale, out vec3 p, outvec3 normal) {
+	void getObjPlane(int i, float scale, out vec3 p, out vec3 normal) {
 		vec3 p1 = v[planes[3 * i] - 1], p2 = v[planes[3 * i + 1] - 1], p3 = v[planes[3 * i + 2] -1];
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
@@ -89,7 +89,7 @@ const char *fragmentSource = R"(
 			float t2 = (-b - sqrt_discr) / 2.0f / a;
 			p = ray.start + ray.dir * t2;
 			if(p.z > zmax || p.z < zmin) t2 = -1;
-			if(t2 > 0 && (t2 < t1 || t1 < 0) t1 = t2;
+			if(t2 > 0 && (t2 < t1 || t1 < 0)) t1 = t2;
 			if(t1 > 0 && (t1 < hit.t || hit.t < 0)) {
 				hit.t = t1;
 				hit.position = ray.start + ray.dir * hit.t;
@@ -158,7 +158,7 @@ const char *fragmentSource = R"(
 	void main() {
 		Ray ray;
 		ray.start = wEye;
-		ray.dirr = normalize(p - wEye);
+		ray.dir = normalize(p - wEye);
 		ray.weight = vec3(1, 1, 1);
 		fragmentColor = vec4(trace(ray), 1);
 	}
