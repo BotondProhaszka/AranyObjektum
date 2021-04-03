@@ -223,8 +223,8 @@ void onInitialization() {
 	};
 	for (int i = 0; i < planes.size(); i++) shader.setUniform(planes[i], "planes[" + std::to_string(i) + "]");
 
-	shader.setUniform(vec3(0.1f, 0.2f, 0.3f), "kd[0]");
-	shader.setUniform(vec3(1.5f, 0.6f, 0.4f), "kd[1]");
+	shader.setUniform(vec3(0.5f, 0.5f, 0.5f), "kd[0]");
+	shader.setUniform(vec3(0.5f, 0.5f, 0.5f), "kd[1]");
 	shader.setUniform(vec3(5, 5, 5), "ks[0]");
 	shader.setUniform(vec3(1, 1, 1), "ks[0]");
 	shader.setUniform(vec3(F(0.17, 3.1), F(0.35, 2.7), F(1.5, 1.9)), "F0");
