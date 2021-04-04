@@ -210,10 +210,10 @@ void onInitialization() {
 	shader.create(vertexSource, fragmentSource, "fragmentColor");
 	shader.setUniform(1, "top");
 
-	const float g = 0.6f, G = 1.6f;
+	const float g = 0.618f, G = 1.618f;
 	std::vector<vec3> v = {
-		vec3(0, g, G), vec3(0, -g, G), vec3(0, -g, -G), vec3(0, g, -G), vec3(G, 0, g), vec3(-G, 0, g), vec3(-G, 0, -g), vec3(G, 0, -g), vec3(g, G , 0), vec3(-g, G, 0),
-		vec3(-g, -G, 0), vec3(g, -G, 0), vec3(1, 1, 1), vec3(-1, 1, 1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(1, -1, -1), vec3(1, 1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1)
+		vec3(0, g, G), vec3(0, -g, G), vec3(0, -g, -G), vec3(0, g, -G),		vec3(G, 0, g), vec3(-G, 0, g), vec3(-G, 0, -g), vec3(G, 0, -g),	 vec3(g, G , 0), vec3(-g, G, 0),
+		vec3(-g, -G, 0), vec3(g, -G, 0), vec3(1, 1, 1), vec3(-1, 1, 1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(1, -1, -1), vec3(1, 1, -1), vec3(-1, 1, -1), vec3(-1, -1, -1)
 	};
 
 	for (int i = 0; i < v.size(); i++) shader.setUniform(v[i], "v[" + std::to_string(i) + "]");
