@@ -219,19 +219,18 @@ void onInitialization() {
 	for (int i = 0; i < v.size(); i++) shader.setUniform(v[i], "v[" + std::to_string(i) + "]");
 
 	std::vector<int> planes = {
-		1, 2, 16,	1, 13, 9,	1, 14, 6,	2, 15, 11,	3, 4, 18,	3, 17, 12,	3, 20, 7,	19, 10, 9,	16, 12, 17,	5, 8, 18,	14
+		1, 2, 16,	1, 13, 9,	1, 14, 6,	2, 15, 11,	3, 4, 18,	3, 17, 12,	3, 20, 7,	19, 10, 9,	16, 12, 17,	5, 8, 18,	14, 10, 19,	6, 7, 20
 	};
 	for (int i = 0; i < planes.size(); i++) shader.setUniform(planes[i], "planes[" + std::to_string(i) + "]");
 
-	shader.setUniform(vec3(0.5f, 0.5f, 0.5f), "kd[0]");
-	shader.setUniform(vec3(0.5f, 0.5f, 0.5f), "kd[1]");
+	shader.setUniform(vec3(1.0f, 1.0f, 1.0f), "kd[0]");
+	shader.setUniform(vec3(1.0f, 1.0f, 1.0f), "kd[1]");
 	shader.setUniform(vec3(5, 5, 5), "ks[0]");
-	shader.setUniform(vec3(1, 1, 1), "ks[0]");
+	shader.setUniform(vec3(1, 1, 1), "ks[1]");
 	shader.setUniform(vec3(F(0.17, 3.1), F(0.35, 2.7), F(1.5, 1.9)), "F0");
 
 }
 
-// Window has become invalid: Redraw
 void onDisplay() {
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
