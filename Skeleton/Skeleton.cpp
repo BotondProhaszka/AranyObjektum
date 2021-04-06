@@ -21,6 +21,12 @@ const char *fragmentSource = R"(
 	#version 330
 	precision highp float;
 	
+	const float A = 2.1f;
+	const float B = 1.1f;
+	const float C = 0.1f;
+
+
+
 	const vec3 La = vec3(0.5f, 0.6f, 0.6f);
 	const vec3 Le = vec3(0.8f, 0.8f, 0.8f);
 	const vec3 lightPosition = vec3(0.4f, 0.4f, 0.25f);
@@ -43,7 +49,7 @@ const char *fragmentSource = R"(
 	uniform int top;
 	uniform vec3 wEye, v[20];
 	uniform int planes[objFaces * 3];
-	uniform vec3 kd[2], ks[2], F0;
+	uniform vec3 kd, ks, F0;
 
 	void getObjPlane(int i, float scale, out vec3 p, out vec3 normal) {
 		vec3 p1 = v[planes[3 * i] - 1], p2 = v[planes[3 * i + 1] - 1], p3 = v[planes[3 * i + 2] -1];
@@ -101,27 +107,23 @@ const char *fragmentSource = R"(
 		return hit;
 	}
 
-	Hit intersectMirascope(Ray ray, Hit hit) {
-		const float f = 0.25f;
-		const float H = 0.98f * f;
+	Hit intersectObject(Ray ray, Hit hit) {
+		
 
-		float a = dot(ray.dir.xy, ray.dir.xy);
-		float b = dot(ray.dir.xy, ray.start.xy) * 2 - 4 * f * ray.dir.z;
-		float c = dot(ray.start.xy, ray.start.xy) - 4 * f * ray.start.z;
-		hit = solveQuadratic(a, b, c, ray, hit, 0, f/2, 2 * f);
-		if(top == 0) return hit;
-		b += 8 * f * ray.dir.z;
-		c += 8 * f * ray.start.z - 4 * f * f;
-		hit = solveQuadratic(a, b, c, ray, hit, f/2, H, -2 * f);
+		float a = A * pow(ray.dir.x, 2) + B * pow(ray.dir.y, 2);
+		float b = 2 * A * ray.start.x * ray.dir.x + 2 * B * ray.start.y * ray.dir.y - C * ray.dir.z;
+		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
+		hit = solveQuadratic(a, b, c, ray, hit, 0, 0.3f, 0.0f);
+		
+		
 		return hit;
 	}
 
 	Hit firstIntersect(Ray ray) {
 		Hit bestHit;
 		bestHit.t = -1;
-		bestHit = intersectMirascope(ray, bestHit);
-		bestHit = intersectConvexPolyhedron(ray, bestHit, 0.02f, 0);
-		bestHit = intersectConvexPolyhedron(ray, bestHit, 1.2f, 1);
+		bestHit = intersectObject(ray, bestHit);
+		bestHit = intersectConvexPolyhedron(ray, bestHit, 1.0f, 1);
 		if(dot(ray.dir, bestHit.normal) > 0) bestHit.normal = bestHit.normal * (-1);
 		return bestHit;
 	}
@@ -144,6 +146,7 @@ const char *fragmentSource = R"(
 				ray.weight *= ka;
 				break;
 			}
+			
 			// mirror reflection
 			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(dot(-ray.dir, hit.normal), 5);
 			ray.start = hit.position + hit.normal * epsilon;
@@ -223,10 +226,8 @@ void onInitialization() {
 	};
 	for (int i = 0; i < planes.size(); i++) shader.setUniform(planes[i], "planes[" + std::to_string(i) + "]");
 
-	shader.setUniform(vec3(1.0f, 1.0f, 1.0f), "kd[0]");
-	shader.setUniform(vec3(1.0f, 1.0f, 1.0f), "kd[1]");
-	shader.setUniform(vec3(5, 5, 5), "ks[0]");
-	shader.setUniform(vec3(1, 1, 1), "ks[1]");
+	shader.setUniform(vec3(0.4f, 0.4f, 0.4f), "kd");
+	shader.setUniform(vec3(1, 1, 1), "ks");
 	shader.setUniform(vec3(F(0.17, 3.1), F(0.35, 2.7), F(1.5, 1.9)), "F0");
 
 }
@@ -244,8 +245,6 @@ void onDisplay() {
 }
 
 void onKeyboard(unsigned char key, int pX, int pY) {
-	if (key == 't') shader.setUniform(1, "top");
-	if (key == 'T') shader.setUniform(0, "top");
 	if (key == 'f') camera.Step(0.1f);
 	if (key == 'F') camera.Step(-0.1f);
 	if (key == 'a') animate = !animate;
