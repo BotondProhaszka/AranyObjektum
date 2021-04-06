@@ -27,7 +27,7 @@ const char *fragmentSource = R"(
 
 
 
-	const vec3 La = vec3(0.4f, 0.9f, 1.0f);
+	const vec3 La = vec3(0.3f, 0.8f, 0.9f);
 	const vec3 Le = vec3(0.8f, 0.8f, 0.8f);
 	const vec3 lightPosition = vec3(0.4f, 0.4f, 0.25f);
 	const vec3 ka = vec3(0.5f, 0.5f, 0.5f);
@@ -48,17 +48,17 @@ const char *fragmentSource = R"(
 	const int objFaces = 12;
 	uniform int top;
 	uniform vec3 wEye, v[20];
-	uniform int planes[objFaces * 3];
+	uniform int planes[objFaces * 5];
 	uniform vec3 kd, ks, F0;
 
 	void getObjPlane(int i, out vec3 p, out vec3 normal) {
-		vec3 p1 = v[planes[3 * i] - 1], p2 = v[planes[3 * i + 1] - 1], p3 = v[planes[3 * i + 2] -1];
+		vec3 p1 = v[planes[5 * i] - 1], p2 = v[planes[5 * i + 1] - 1], p3 = v[planes[5 * i + 2] -1];
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
 		p = p1 + vec3(0, 0, 0.03f);
 	}
 		
-	Hit intersectConvexPolyhedron(Ray ray, Hit hit, int mat) {
+	Hit intersectConvexPolyhedron(Ray ray, Hit hit) {
 		for(int i = 0; i < objFaces; i++) {
 			vec3 p1, normal;
 			getObjPlane(i, p1, normal);
@@ -76,32 +76,37 @@ const char *fragmentSource = R"(
 				}
 			}
 			if (!outside) {
-
-
-
-
+				hit.mat = 1;
+				for(int j = 0; j < 5; j++){
+					vec3 a = v[planes[i * 5 + j]];
+					vec3 b = v[planes[i * 5 + ((j + 1) % 5)]];
+					vec3 oldal = b - a;
+					vec3 m = hit.position * (oldal / length(oldal)); 
+					vec3 c = hit.position - a;						
+					float asd = sqrt(length(m) * length(m) + length(c) * length(c));
+					if(asd < 0.1f) 
+						hit.mat = 3;
+				}
+				
 				hit.t = ti;
 				hit.position = pintersect;
 				hit.normal = normalize(normal);
-				hit.mat = 3;
 			}
 		}
 		return hit;
 	}
 	
-	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float zmin, float zmax, float normz){
+	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float normz){
 		float discr = b * b - 4.0f * a * c;
 		if(discr >= 0){
 			float sqrt_discr = sqrt(discr);
 			float t1 = (-b + sqrt_discr) / 2.0f / a;
 			vec3 p = ray.start + ray.dir * t1;
 			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t1 = -1.0f;			
-			if(p.z > zmax || p.z < zmin) t1 = -1;
 			float t2 = (-b - sqrt_discr) / 2.0f / a;
 			p = ray.start + ray.dir * t2;
 			
 			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t2 = -1.0f;
-			if(p.z > zmax || p.z < zmin) t2 = -1;
 			if(t2 > 0 && (t2 < t1 || t1 < 0)) t1 = t2;
 			if(t1 > 0 && (t1 < hit.t || hit.t < 0)) {
 				hit.t = t1;
@@ -118,7 +123,7 @@ const char *fragmentSource = R"(
 		float b = 2 * A * ray.start.x * ray.dir.x + 2 * B * ray.start.y * ray.dir.y - C * ray.dir.z;
 		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
 		
-		hit = solveQuadratic(a, b, c, ray, hit, 0, 0.3f, 0.6f);
+		hit = solveQuadratic(a, b, c, ray, hit, 0.6f);
 			
 		
 		
@@ -132,7 +137,7 @@ const char *fragmentSource = R"(
 		Hit bestHit;
 		bestHit.t = -1;
 		bestHit = intersectObject(ray, bestHit);
-		bestHit = intersectConvexPolyhedron(ray, bestHit, 1);
+		bestHit = intersectConvexPolyhedron(ray, bestHit);
 		if(dot(ray.dir, bestHit.normal) > 0) bestHit.normal = bestHit.normal * (-1);
 		return bestHit;
 	}
@@ -203,6 +208,10 @@ struct Camera {
 		eye = normalize(eye + right * step) * length(eye);
 		set();
 	}
+	void StepUp(float step) {
+		eye = normalize(eye + rvup * step) * length(eye);
+		set();
+	}
 };
 
 
@@ -235,7 +244,7 @@ void onInitialization() {
 	for (int i = 0; i < v.size(); i++) shader.setUniform(v[i], "v[" + std::to_string(i) + "]");
 
 	std::vector<int> planes = {
-		1, 2, 16,	1, 13, 9,	1, 14, 6,	2, 15, 11,	3, 4, 18,	3, 17, 12,	3, 20, 7,	19, 10, 9,	16, 12, 17,	5, 8, 18,	14, 10, 19,	6, 7, 20
+		1, 2, 16, 5, 13,	1, 13, 9, 10, 14,	1, 14, 6, 15, 2,	2, 15, 11, 12, 16,	3, 4, 18, 8, 17,	3, 17, 12, 11, 20,	3, 20, 7, 19, 4,	19, 10, 9, 18, 4,	16, 12, 17, 8, 5,	5, 8, 18, 9, 13,	14, 10, 19, 7, 6,	6, 7, 20, 11, 15
 	};
 	for (int i = 0; i < planes.size(); i++) shader.setUniform(planes[i], "planes[" + std::to_string(i) + "]");
 
@@ -258,9 +267,11 @@ void onDisplay() {
 }
 
 void onKeyboard(unsigned char key, int pX, int pY) {
-	if (key == 'f') camera.Step(0.1f);
-	if (key == 'F') camera.Step(-0.1f);
-	if (key == 'a') animate = !animate;
+	if (key == 'd') camera.Step(0.1f);
+	if (key == 'a') camera.Step(-0.1f);
+	if (key == 'w') camera.StepUp(0.1f);
+	if (key == 's') camera.StepUp(-0.1f);
+	if (key == 'e') animate = !animate;
 }
 
 void onKeyboardUp(unsigned char key, int pX, int pY) {}
