@@ -27,7 +27,7 @@ const char *fragmentSource = R"(
 
 
 
-	const vec3 La = vec3(0.5f, 0.6f, 0.6f);
+	const vec3 La = vec3(0.4f, 0.9f, 1.0f);
 	const vec3 Le = vec3(0.8f, 0.8f, 0.8f);
 	const vec3 lightPosition = vec3(0.4f, 0.4f, 0.25f);
 	const vec3 ka = vec3(0.5f, 0.5f, 0.5f);
@@ -70,17 +70,20 @@ const char *fragmentSource = R"(
 				if (i == j) continue;
 				vec3 p11, n;
 				getObjPlane(j, p11, n);
-
 				if (dot(n, pintersect - p11) > 0) {
 					outside = true;
 					break;
 				}
 			}
 			if (!outside) {
+
+
+
+
 				hit.t = ti;
 				hit.position = pintersect;
 				hit.normal = normalize(normal);
-				hit.mat = mat;
+				hit.mat = 3;
 			}
 		}
 		return hit;
@@ -152,11 +155,15 @@ const char *fragmentSource = R"(
 				ray.weight *= ka;
 				break;
 			}
-			
-			// mirror reflection
-			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
-			ray.start = hit.position + hit.normal * epsilon;
-			ray.dir = reflect(ray.dir, hit.normal);
+			else if(hit.mat == 3){
+				ray.start = hit.position + hit.normal * epsilon;
+				ray.dir = reflect(ray.dir, hit.normal);
+			}
+			else{
+				ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
+				ray.start = hit.position + hit.normal * epsilon;
+				ray.dir = reflect(ray.dir, hit.normal);
+			}
 		}
 		outRadiance += ray.weight * La;
 		return outRadiance;
