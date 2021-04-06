@@ -21,9 +21,9 @@ const char *fragmentSource = R"(
 	#version 330
 	precision highp float;
 	
-	const float A = 2.1f;
-	const float B = 1.1f;
-	const float C = 0.1f;
+	const float A = 0.5f;
+	const float B = 0.8f;
+	const float C = 0.2f;
 
 
 
@@ -51,17 +51,17 @@ const char *fragmentSource = R"(
 	uniform int planes[objFaces * 3];
 	uniform vec3 kd, ks, F0;
 
-	void getObjPlane(int i, float scale, out vec3 p, out vec3 normal) {
+	void getObjPlane(int i, out vec3 p, out vec3 normal) {
 		vec3 p1 = v[planes[3 * i] - 1], p2 = v[planes[3 * i + 1] - 1], p3 = v[planes[3 * i + 2] -1];
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
-		p = p1 * scale + vec3(0, 0, 0.03f);
+		p = p1 + vec3(0, 0, 0.03f);
 	}
 		
-	Hit intersectConvexPolyhedron(Ray ray, Hit hit, float scale, int mat) {
+	Hit intersectConvexPolyhedron(Ray ray, Hit hit, int mat) {
 		for(int i = 0; i < objFaces; i++) {
 			vec3 p1, normal;
-			getObjPlane(i, scale, p1, normal);
+			getObjPlane(i, p1, normal);
 			float ti = abs(dot(normal, ray.dir)) > epsilon ? dot(p1 - ray.start, normal) / dot(normal, ray.dir) : -1;
 			if (ti <= epsilon || (ti > hit.t && hit.t > 0)) continue;
 			vec3 pintersect = ray.start + ray.dir * ti;
@@ -69,7 +69,7 @@ const char *fragmentSource = R"(
 			for(int j = 0; j < objFaces; j++) {
 				if (i == j) continue;
 				vec3 p11, n;
-				getObjPlane(j, scale, p11, n);
+				getObjPlane(j, p11, n);
 
 				if (dot(n, pintersect - p11) > 0) {
 					outside = true;
@@ -92,9 +92,12 @@ const char *fragmentSource = R"(
 			float sqrt_discr = sqrt(discr);
 			float t1 = (-b + sqrt_discr) / 2.0f / a;
 			vec3 p = ray.start + ray.dir * t1;
+			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t1 = -1.0f;			
 			if(p.z > zmax || p.z < zmin) t1 = -1;
 			float t2 = (-b - sqrt_discr) / 2.0f / a;
 			p = ray.start + ray.dir * t2;
+			
+			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t2 = -1.0f;
 			if(p.z > zmax || p.z < zmin) t2 = -1;
 			if(t2 > 0 && (t2 < t1 || t1 < 0)) t1 = t2;
 			if(t1 > 0 && (t1 < hit.t || hit.t < 0)) {
@@ -108,12 +111,15 @@ const char *fragmentSource = R"(
 	}
 
 	Hit intersectObject(Ray ray, Hit hit) {
-		
-
 		float a = A * pow(ray.dir.x, 2) + B * pow(ray.dir.y, 2);
 		float b = 2 * A * ray.start.x * ray.dir.x + 2 * B * ray.start.y * ray.dir.y - C * ray.dir.z;
 		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
-		hit = solveQuadratic(a, b, c, ray, hit, 0, 0.3f, 0.0f);
+		
+		hit = solveQuadratic(a, b, c, ray, hit, 0, 0.3f, 0.6f);
+			
+		
+		
+		
 		
 		
 		return hit;
@@ -123,7 +129,7 @@ const char *fragmentSource = R"(
 		Hit bestHit;
 		bestHit.t = -1;
 		bestHit = intersectObject(ray, bestHit);
-		bestHit = intersectConvexPolyhedron(ray, bestHit, 1.0f, 1);
+		bestHit = intersectConvexPolyhedron(ray, bestHit, 1);
 		if(dot(ray.dir, bestHit.normal) > 0) bestHit.normal = bestHit.normal * (-1);
 		return bestHit;
 	}
@@ -148,7 +154,7 @@ const char *fragmentSource = R"(
 			}
 			
 			// mirror reflection
-			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(dot(-ray.dir, hit.normal), 5);
+			ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
 			ray.start = hit.position + hit.normal * epsilon;
 			ray.dir = reflect(ray.dir, hit.normal);
 		}
@@ -187,7 +193,7 @@ struct Camera {
 		set();
 	}
 	void Step(float step) {
-		eye = normalize(eye + pvup * step) * length(eye);
+		eye = normalize(eye + right * step) * length(eye);
 		set();
 	}
 };
