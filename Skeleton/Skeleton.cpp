@@ -21,8 +21,8 @@ const char *fragmentSource = R"(
 	#version 330
 	precision highp float;
 	
-	const float A = 0.5f;
-	const float B = 0.8f;
+	const float A = 0.4f;
+	const float B = 0.4f;
 	const float C = 0.2f;
 
 
@@ -46,7 +46,6 @@ const char *fragmentSource = R"(
 	};
 
 	const int objFaces = 12;
-	uniform int top;
 	uniform vec3 wEye, v[20];
 	uniform int planes[objFaces * 5];
 	uniform vec3 kd, ks, F0;
@@ -57,11 +56,7 @@ const char *fragmentSource = R"(
 		if(dot(p1, normal) < 0) normal = -normal;
 		p = p1;
 	}
-	void getMyObjPlane(int i, out vec3 p1, out vec3 p2, out vec3 p3, out vec3 p4, out vec3 p5) {
-		p1 = v[planes[5 * i] - 1], p2 = v[planes[5 * i + 1] - 1], p3 = v[planes[5 * i + 2] -1], p3 = v[planes[5 * i + 3] -1], p3 = v[planes[5 * i + 4] -1];
-		
-	}
-		
+	
 	Hit intersectConvexPolyhedron(Ray ray, Hit hit) {
 		for(int i = 0; i < objFaces; i++) {
 			vec3 p1, normal;
@@ -80,25 +75,19 @@ const char *fragmentSource = R"(
 				}
 			}
 			if (!outside) {
-				
+				hit.mat = 1;
 				for(int j = 0; j < 5; j++){
-					hit.mat = 1;
-					vec3 p1, p2, p3, p4, p5;
-					getMyObjPlane(i, p1, p2, p3, p4, p5);
-					vec3 p[5];
-					p[0] = p1; p[1] = p2; p[2] = p3; p[3] = p4; p[4] = p5;
-					vec3 x1 = p[j];
-					vec3 x2 = p[((j+1)%5)];
+					
+					vec3 x1 = v[planes[5 * i] - 1];
+					vec3 x2 = v[planes[(5 * i + 1 % 5 == 0 ? 5 * i : 5 * i + 1)] - 1];
 					vec3 x0 = hit.position;
 					
 					//https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-					//float dis = length(cross((x0 - x1), (x0 - x2))) / length(x2 - x1);
-
-					//https://math.stackexchange.com/questions/1905533/find-perpendicular-distance-from-point-to-line-in-3d
-					float dis = length(cross(x0 - x1, x2 - x1)) / length(x2 - x1); 
+					float dis = length(cross((x0 - x1), (x0 - x2))) / length(x2 - x1);
 					
-					if(dis < 0.1f){
+					if(dis > 0.1f ){
 						hit.mat = 3;
+						break;
 					}
 				}
 				hit.t = ti;
@@ -137,11 +126,6 @@ const char *fragmentSource = R"(
 		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
 		
 		hit = solveQuadratic(a, b, c, ray, hit, 0.6f);
-			
-		
-		
-		
-		
 		
 		return hit;
 	}
@@ -246,7 +230,6 @@ void onInitialization() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	shader.create(vertexSource, fragmentSource, "fragmentColor");
-	shader.setUniform(1, "top");
 
 	const float g = 0.618f, G = 1.618f;
 	std::vector<vec3> v = {
