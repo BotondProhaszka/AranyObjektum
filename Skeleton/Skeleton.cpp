@@ -55,7 +55,11 @@ const char *fragmentSource = R"(
 		vec3 p1 = v[planes[5 * i] - 1], p2 = v[planes[5 * i + 1] - 1], p3 = v[planes[5 * i + 2] -1];
 		normal = cross(p2 - p1, p3 - p1);
 		if(dot(p1, normal) < 0) normal = -normal;
-		p = p1 + vec3(0, 0, 0.03f);
+		p = p1;
+	}
+	void getMyObjPlane(int i, out vec3 p1, out vec3 p2, out vec3 p3, out vec3 p4, out vec3 p5) {
+		p1 = v[planes[5 * i] - 1], p2 = v[planes[5 * i + 1] - 1], p3 = v[planes[5 * i + 2] -1], p3 = v[planes[5 * i + 3] -1], p3 = v[planes[5 * i + 4] -1];
+		
 	}
 		
 	Hit intersectConvexPolyhedron(Ray ray, Hit hit) {
@@ -76,18 +80,27 @@ const char *fragmentSource = R"(
 				}
 			}
 			if (!outside) {
-				hit.mat = 1;
-				for(int j = 0; j < 5; j++){
-					vec3 a = v[planes[i * 5 + j]];
-					vec3 b = v[planes[i * 5 + ((j + 1) % 5)]];
-					vec3 oldal = b - a;
-					vec3 m = hit.position * (oldal / length(oldal)); 
-					vec3 c = hit.position - a;						
-					float asd = sqrt(length(m) * length(m) + length(c) * length(c));
-					if(asd < 0.1f) 
-						hit.mat = 3;
-				}
 				
+				for(int j = 0; j < 5; j++){
+					hit.mat = 1;
+					vec3 p1, p2, p3, p4, p5;
+					getMyObjPlane(i, p1, p2, p3, p4, p5);
+					vec3 p[5];
+					p[0] = p1; p[1] = p2; p[2] = p3; p[3] = p4; p[4] = p5;
+					vec3 x1 = p[j];
+					vec3 x2 = p[((j+1)%5)];
+					vec3 x0 = hit.position;
+					
+					//https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+					//float dis = length(cross((x0 - x1), (x0 - x2))) / length(x2 - x1);
+
+					//https://math.stackexchange.com/questions/1905533/find-perpendicular-distance-from-point-to-line-in-3d
+					float dis = length(cross(x0 - x1, x2 - x1)) / length(x2 - x1); 
+					
+					if(dis < 0.1f){
+						hit.mat = 3;
+					}
+				}
 				hit.t = ti;
 				hit.position = pintersect;
 				hit.normal = normalize(normal);
