@@ -82,19 +82,15 @@ const char *fragmentSource = R"(
 				
 				for(int j = 0; j < 5; j++){
 
-						vec3 x1 = v[planes[5 * i + j] - 1];
-						vec3 x2 = v[planes[5 * i +(( j + 1) % 5)] - 1];
-						vec3 x0 = hit.position;
-					
-						float dis = length(cross((x2 - x1), (x1 - x0))) / length(x2 - x1);
-					
-						if(dis < 0.1f){
-							hit.mat = 1;
-							
-						}
-					
+					vec3 x1 = v[planes[5 * i + j] - 1];
+					vec3 x2 = v[planes[5 * i +(( j + 1) % 5)] - 1];
+					vec3 x0 = hit.position;
+					float dis = length(cross((x2 - x1), (x1 - x0))) / length(x2 - x1);
+					if(dis < 0.1f){
+						hit.mat = 1;
+						break;	
+					}
 				}
-				
 			}
 		}
 		return hit;
