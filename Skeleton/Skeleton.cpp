@@ -34,11 +34,12 @@ const char *fragmentSource = R"(
 	const float shininess = 500.0f;
 	const int maxdepth = 5;
 	const float epsilon = 0.1f;
-	const float theta = 72;
+	const float theta = 1.256637f;
+	const float disFromCorner = 0.1f;
 	
 	struct Hit {
 		float t;
-		vec3 position, normal;
+		vec3 position, normal, origo;
 		int mat;
 	};
 
@@ -85,13 +86,17 @@ const char *fragmentSource = R"(
 				for(int j = 0; j < 5; j++){
 
 					vec3 x1 = v[planes[5 * i + j] - 1];
-					vec3 x2 = v[planes[5 * i +(( j + 1) % 5)] - 1];
+					vec3 x2 = v[planes[5 * i +((j + 1) % 5)] - 1];
 					vec3 x0 = hit.position;
 					float dis = length(cross((x2 - x1), (x1 - x0))) / length(x2 - x1);
-					if(dis < 0.1f){
+					if(dis < disFromCorner){
 						hit.mat = 1;
 						break;	
 					}
+				vec3 p = vec3(0,0,0);
+				for(int j = 0; j < 5; j++) p += v[planes[5 * i + j] - 1];
+
+				hit.origo = p / 5.0f;
 				}
 			}
 		}
@@ -160,8 +165,34 @@ const char *fragmentSource = R"(
 				break;
 			}
 			else if(hit.mat == 3){
-				ray.start = hit.position + hit.normal * epsilon;
+				
+				
+				
+				vec3 a = hit.position;
+				vec3 b = hit.normal;
+				
+				vec3 apb = ((a*a)/(b*b))*b;
+				vec3 amb = a - apb;
+				vec3 w = cross(b, amb);
+				float x1 = cos(theta) / length(amb);
+				float x2 = sin(theta) / length(w);
+				vec3 ambt = length(amb)*(x1*amb + x2*w);
+				vec3 result = ambt + apb;
+				hit.position = result;
+				
+				
+				a = ray.dir;
+				apb = ((a*a)/(b*b))*b;
+				amb = a - apb;
+				w = cross(b, amb);
+				x1 = cos(theta) / length(amb);
+				x2 = sin(theta) / length(w);
+				ambt = length(amb)*(x1*amb + x2*w);
+				result = ambt + apb;
+				ray.dir = result;
+				
 				ray.dir = reflect(ray.dir, hit.normal);
+				ray.start = hit.position + hit.normal * epsilon;
 			}
 			else{
 				ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
