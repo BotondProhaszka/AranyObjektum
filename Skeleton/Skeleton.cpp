@@ -34,6 +34,7 @@ const char *fragmentSource = R"(
 	const float shininess = 500.0f;
 	const int maxdepth = 5;
 	const float epsilon = 0.1f;
+	const float theta = 72;
 	
 	struct Hit {
 		float t;
@@ -76,6 +77,7 @@ const char *fragmentSource = R"(
 			}
 			if (!outside) {
 				hit.mat = 3;
+				
 				hit.t = ti;
 				hit.position = pintersect;
 				hit.normal = normalize(normal);
@@ -95,6 +97,8 @@ const char *fragmentSource = R"(
 		}
 		return hit;
 	}
+
+	
 	
 	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float normz){
 		float discr = b * b - 4.0f * a * c;
