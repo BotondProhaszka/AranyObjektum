@@ -34,7 +34,7 @@ const char *fragmentSource = R"(
 	const float shininess = 500.0f;
 	const int maxdepth = 5;
 	const float epsilon = 0.1f;
-	const float theta = 1.256637f;
+	const float rotateTheta = 1.256637f;
 	const float disFromCorner = 0.1f;
 	
 	struct Hit {
@@ -93,10 +93,11 @@ const char *fragmentSource = R"(
 						hit.mat = 1;
 						break;	
 					}
+
 				vec3 p = vec3(0,0,0);
 				for(int j = 0; j < 5; j++) p += v[planes[5 * i + j] - 1];
 
-				hit.origo = p / 5.0f;
+				hit.origo = (p / 5.0f);
 				}
 			}
 		}
@@ -145,6 +146,98 @@ const char *fragmentSource = R"(
 		if(dot(ray.dir, bestHit.normal) > 0) bestHit.normal = bestHit.normal * (-1);
 		return bestHit;
 	}
+/*
+	float rotationMatrix[4][4];
+	float inputMatrix[4][1];
+	float outputMatrix[4][1];
+
+void setUpRotationMatrix(float angle, float u, float v, float w)
+{
+    float L = (u*u + v * v + w * w);
+    angle = angle * 3.1415f / 180.0f; //converting to radian value
+    float u2 = u * u;
+    float v2 = v * v;
+    float w2 = w * w; 
+ 
+    rotationMatrix[0][0] = (u2 + (v2 + w2) * cos(angle)) / L;
+    rotationMatrix[0][1] = (u * v * (1 - cos(angle)) - w * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[0][2] = (u * w * (1 - cos(angle)) + v * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[0][3] = 0.0; 
+ 
+    rotationMatrix[1][0] = (u * v * (1 - cos(angle)) + w * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[1][1] = (v2 + (u2 + w2) * cos(angle)) / L;
+    rotationMatrix[1][2] = (v * w * (1 - cos(angle)) - u * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[1][3] = 0.0; 
+ 
+    rotationMatrix[2][0] = (u * w * (1 - cos(angle)) - v * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[2][1] = (v * w * (1 - cos(angle)) + u * sqrt(L) * sin(angle)) / L;
+    rotationMatrix[2][2] = (w2 + (u2 + v2) * cos(angle)) / L;
+    rotationMatrix[2][3] = 0.0; 
+ 
+    rotationMatrix[3][0] = 0.0;
+    rotationMatrix[3][1] = 0.0;
+    rotationMatrix[3][2] = 0.0;
+    rotationMatrix[3][3] = 1.0;
+}
+
+
+void multiplyMatrix()
+{
+    for(int i = 0; i < 4; i++ ){
+        for(int j = 0; j < 1; j++){
+            outputMatrix[i][j] = 0;
+            for(int k = 0; k < 4; k++){
+                outputMatrix[i][j] += rotationMatrix[i][k] * inputMatrix[k][j];
+            }
+        }
+    }
+}
+
+vec3 RotateShit(vec3 points, vec3 v){
+
+	 
+
+	float angle = 72.0f;
+   
+    inputMatrix[0][0] = points.x;
+    inputMatrix[1][0] = points.y;
+    inputMatrix[2][0] = points.z;
+    inputMatrix[3][0] = 1.0; 
+ 
+  
+    setUpRotationMatrix(angle, v.x, v.y, v.z);
+    multiplyMatrix();
+
+
+	return vec3(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0]);
+
+}
+*/
+
+
+vec3 ArbitraryRotate(vec3 p,float theta,vec3 r)
+{
+   vec3 q = vec3(0, 0, 0);
+   float costheta,sintheta;
+
+   normalize(r);
+   costheta = cos(theta);
+   sintheta = sin(theta);
+
+   q.x += (costheta + (1 - costheta) * r.x * r.x) * p.x;
+   q.x += ((1 - costheta) * r.x * r.y - r.z * sintheta) * p.y;
+   q.x += ((1 - costheta) * r.x * r.z + r.y * sintheta) * p.z;
+
+   q.y += ((1 - costheta) * r.x * r.y + r.z * sintheta) * p.x;
+   q.y += (costheta + (1 - costheta) * r.y * r.y) * p.y;
+   q.y += ((1 - costheta) * r.y * r.z - r.x * sintheta) * p.z;
+
+   q.z += ((1 - costheta) * r.x * r.z - r.y * sintheta) * p.x;
+   q.z += ((1 - costheta) * r.y * r.z + r.x * sintheta) * p.y;
+   q.z += (costheta + (1 - costheta) * r.z * r.z) * p.z;
+
+   return(q);
+}
 
 	vec3 trace(Ray ray) {
 		vec3 outRadiance = vec3(0, 0, 0);
@@ -166,10 +259,10 @@ const char *fragmentSource = R"(
 			}
 			else if(hit.mat == 3){
 				
-				
-				
-				vec3 a = hit.position;
-				vec3 b = hit.normal;
+/*
+
+				vec3 a = ray.start;
+				vec3 b = hit.origo;
 				
 				vec3 apb = ((a*a)/(b*b))*b;
 				vec3 amb = a - apb;
@@ -178,7 +271,7 @@ const char *fragmentSource = R"(
 				float x2 = sin(theta) / length(w);
 				vec3 ambt = length(amb)*(x1*amb + x2*w);
 				vec3 result = ambt + apb;
-				hit.position = result;
+				ray.start = result;
 				
 				
 				a = ray.dir;
@@ -190,9 +283,17 @@ const char *fragmentSource = R"(
 				ambt = length(amb)*(x1*amb + x2*w);
 				result = ambt + apb;
 				ray.dir = result;
+*/
 				
 				ray.dir = reflect(ray.dir, hit.normal);
 				ray.start = hit.position + hit.normal * epsilon;
+
+				ray.start = ArbitraryRotate(ray.start, rotateTheta, hit.origo / 2.0f); 
+				ray.dir = ArbitraryRotate(ray.dir, rotateTheta, hit.origo / 2.0f); 
+				
+				//ray.start = RotateShit(ray.start, hit.origo);
+				//ray.dir = RotateShit(ray.dir, hit.origo);
+				
 			}
 			else{
 				ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
@@ -313,8 +414,6 @@ void onIdle() {
 }
 
 //=============================================================================================
-// Mintaprogram: Zöld háromszög. Ervenyes 2019. osztol.
-//
 // A beadott program csak ebben a fajlban lehet, a fajl 1 byte-os ASCII karaktereket tartalmazhat, BOM kihuzando.
 // Tilos:
 // - mast "beincludolni", illetve mas konyvtarat hasznalni
