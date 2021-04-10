@@ -146,10 +146,10 @@ const char *fragmentSource = R"(
 		if(dot(ray.dir, bestHit.normal) > 0) bestHit.normal = bestHit.normal * (-1);
 		return bestHit;
 	}
-/*
-	float rotationMatrix[4][4];
-	float inputMatrix[4][1];
-	float outputMatrix[4][1];
+
+	mat4 rotationMatrix;
+	vec4 inputMatrix;
+	vec4 outputMatrix;
 
 void setUpRotationMatrix(float angle, float u, float v, float w)
 {
@@ -181,17 +181,7 @@ void setUpRotationMatrix(float angle, float u, float v, float w)
 }
 
 
-void multiplyMatrix()
-{
-    for(int i = 0; i < 4; i++ ){
-        for(int j = 0; j < 1; j++){
-            outputMatrix[i][j] = 0;
-            for(int k = 0; k < 4; k++){
-                outputMatrix[i][j] += rotationMatrix[i][k] * inputMatrix[k][j];
-            }
-        }
-    }
-}
+
 
 vec3 RotateShit(vec3 points, vec3 v){
 
@@ -199,20 +189,19 @@ vec3 RotateShit(vec3 points, vec3 v){
 
 	float angle = 72.0f;
    
-    inputMatrix[0][0] = points.x;
-    inputMatrix[1][0] = points.y;
-    inputMatrix[2][0] = points.z;
-    inputMatrix[3][0] = 1.0; 
+    inputMatrix.x= points.x;
+    inputMatrix.y = points.y;
+    inputMatrix.z = points.z;
+    inputMatrix.w = 1.0; 
  
   
     setUpRotationMatrix(angle, v.x, v.y, v.z);
-    multiplyMatrix();
+    outputMatrix = rotationMatrix * inputMatrix;
 
 
-	return vec3(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0]);
+	return vec3(outputMatrix.x, outputMatrix.y, outputMatrix.z);
 
 }
-*/
 
 
 vec3 ArbitraryRotate(vec3 p,float theta,vec3 r)
@@ -288,11 +277,11 @@ vec3 ArbitraryRotate(vec3 p,float theta,vec3 r)
 				ray.dir = reflect(ray.dir, hit.normal);
 				ray.start = hit.position + hit.normal * epsilon;
 
-				ray.start = ArbitraryRotate(ray.start, rotateTheta, hit.origo / 2.0f); 
-				ray.dir = ArbitraryRotate(ray.dir, rotateTheta, hit.origo / 2.0f); 
+				//ray.start = ArbitraryRotate(ray.start, rotateTheta, hit.origo / 2.0f); 
+				//ray.dir = ArbitraryRotate(ray.dir, rotateTheta, hit.origo / 2.0f); 
 				
-				//ray.start = RotateShit(ray.start, hit.origo);
-				//ray.dir = RotateShit(ray.dir, hit.origo);
+				ray.start = RotateShit(ray.start, hit.origo);
+				ray.dir = RotateShit(ray.dir, hit.origo);
 				
 			}
 			else{
