@@ -25,16 +25,14 @@ const char *fragmentSource = R"(
 	const float B = 0.4f;
 	const float C = 0.2f;
 
-
-
-	const vec3 La = vec3(0.3f, 0.8f, 0.9f);
-	const vec3 Le = vec3(0.8f, 0.8f, 0.8f);
+	const vec3 La = vec3(0.5f, 0.8f, 0.9f);
+	const vec3 Le = vec3(0.6f, 0.9f, 1.0f);
 	const vec3 lightPosition = vec3(0.4f, 0.4f, 0.25f);
 	const vec3 ka = vec3(0.5f, 0.5f, 0.5f);
 	const float shininess = 500.0f;
 	const int maxdepth = 5;
 	const float epsilon = 0.1f;
-	const float rotateTheta = 1.256637f;
+	const float rotateTheta = 72.0f;
 	const float disFromCorner = 0.1f;
 	
 	struct Hit {
@@ -93,7 +91,6 @@ const char *fragmentSource = R"(
 						hit.mat = 1;
 						break;	
 					}
-
 				vec3 p = vec3(0,0,0);
 				for(int j = 0; j < 5; j++) p += v[planes[5 * i + j] - 1];
 
@@ -104,8 +101,6 @@ const char *fragmentSource = R"(
 		return hit;
 	}
 
-	
-	
 	Hit solveQuadratic(float a, float b, float c, Ray ray, Hit hit, float normz){
 		float discr = b * b - 4.0f * a * c;
 		if(discr >= 0){
@@ -132,7 +127,6 @@ const char *fragmentSource = R"(
 		float a = A * pow(ray.dir.x, 2) + B * pow(ray.dir.y, 2);
 		float b = 2 * A * ray.start.x * ray.dir.x + 2 * B * ray.start.y * ray.dir.y - C * ray.dir.z;
 		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
-		
 		hit = solveQuadratic(a, b, c, ray, hit, 0.6f);
 		
 		return hit;
@@ -151,8 +145,9 @@ const char *fragmentSource = R"(
 	vec4 inputMatrix;
 	vec4 outputMatrix;
 
-void setUpRotationMatrix(float angle, float u, float v, float w)
+void setUpRotationMatrix(float angle, vec3 vector)
 {
+	float u = vector.x, v = vector.y, w = vector.z;
     float L = (u*u + v * v + w * w);
     angle = angle * 3.1415f / 180.0f; //converting to radian value
     float u2 = u * u;
@@ -180,52 +175,17 @@ void setUpRotationMatrix(float angle, float u, float v, float w)
     rotationMatrix[3][3] = 1.0;
 }
 
-
-
-
-vec3 RotateShit(vec3 points, vec3 v){
-
-	 
-
-	float angle = 72.0f;
+vec3 Rotate(vec3 points, vec3 v, float s){
+	float angle = s * rotateTheta;
    
     inputMatrix.x= points.x;
     inputMatrix.y = points.y;
     inputMatrix.z = points.z;
-    inputMatrix.w = 1.0; 
- 
-  
-    setUpRotationMatrix(angle, v.x, v.y, v.z);
+    inputMatrix.w = 1.0;
+    setUpRotationMatrix(angle, v);
     outputMatrix = rotationMatrix * inputMatrix;
-
-
 	return vec3(outputMatrix.x, outputMatrix.y, outputMatrix.z);
 
-}
-
-
-vec3 ArbitraryRotate(vec3 p,float theta,vec3 r)
-{
-   vec3 q = vec3(0, 0, 0);
-   float costheta,sintheta;
-
-   normalize(r);
-   costheta = cos(theta);
-   sintheta = sin(theta);
-
-   q.x += (costheta + (1 - costheta) * r.x * r.x) * p.x;
-   q.x += ((1 - costheta) * r.x * r.y - r.z * sintheta) * p.y;
-   q.x += ((1 - costheta) * r.x * r.z + r.y * sintheta) * p.z;
-
-   q.y += ((1 - costheta) * r.x * r.y + r.z * sintheta) * p.x;
-   q.y += (costheta + (1 - costheta) * r.y * r.y) * p.y;
-   q.y += ((1 - costheta) * r.y * r.z - r.x * sintheta) * p.z;
-
-   q.z += ((1 - costheta) * r.x * r.z - r.y * sintheta) * p.x;
-   q.z += ((1 - costheta) * r.y * r.z + r.x * sintheta) * p.y;
-   q.z += (costheta + (1 - costheta) * r.z * r.z) * p.z;
-
-   return(q);
 }
 
 	vec3 trace(Ray ray) {
@@ -247,42 +207,14 @@ vec3 ArbitraryRotate(vec3 p,float theta,vec3 r)
 				break;
 			}
 			else if(hit.mat == 3){
-				
-/*
-
-				vec3 a = ray.start;
-				vec3 b = hit.origo;
-				
-				vec3 apb = ((a*a)/(b*b))*b;
-				vec3 amb = a - apb;
-				vec3 w = cross(b, amb);
-				float x1 = cos(theta) / length(amb);
-				float x2 = sin(theta) / length(w);
-				vec3 ambt = length(amb)*(x1*amb + x2*w);
-				vec3 result = ambt + apb;
-				ray.start = result;
-				
-				
-				a = ray.dir;
-				apb = ((a*a)/(b*b))*b;
-				amb = a - apb;
-				w = cross(b, amb);
-				x1 = cos(theta) / length(amb);
-				x2 = sin(theta) / length(w);
-				ambt = length(amb)*(x1*amb + x2*w);
-				result = ambt + apb;
-				ray.dir = result;
-*/
-				
 				ray.dir = reflect(ray.dir, hit.normal);
 				ray.start = hit.position + hit.normal * epsilon;
 
-				//ray.start = ArbitraryRotate(ray.start, rotateTheta, hit.origo / 2.0f); 
-				//ray.dir = ArbitraryRotate(ray.dir, rotateTheta, hit.origo / 2.0f); 
-				
-				ray.start = RotateShit(ray.start, hit.origo);
-				ray.dir = RotateShit(ray.dir, hit.origo);
-				
+				float rotateDirection = 1.0f;
+
+				if(d % 2 == 1) rotateDirection *= -1.0f;
+				ray.start = Rotate(ray.start, hit.origo, rotateDirection);
+				ray.dir = Rotate(ray.dir, hit.origo, rotateDirection);
 			}
 			else{
 				ray.weight *= F0 + (vec3(1, 1, 1) - F0) * pow(1 - dot(-ray.dir, hit.normal), 5);
