@@ -327,7 +327,7 @@ void onInitialization() {
 	shader.setUniform(vec3(0.4f, 0.4f, 0.4f), "kd");
 	shader.setUniform(vec3(1, 1, 1), "ks");
 	shader.setUniform(vec3(F(0.17, 3.1), F(0.35, 2.7), F(1.5, 1.9)), "F0");
-	printf("Usage:\na: Step left\nd: Step right\ne: Enable animation\n");
+	printf("Usage:\na: Step left\nd: Step right\nw: Step up\ns: Step down\ne: Enable animation\n");
 }
 
 void onDisplay() {
