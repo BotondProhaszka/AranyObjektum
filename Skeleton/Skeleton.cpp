@@ -63,6 +63,7 @@ const char *fragmentSource = R"(
 	const float epsilon = 0.1f;
 	const float rotateTheta = 72.0f;
 	const float disFromCorner = 0.1f;
+	const float maxObjectSize = 0.3f;
 	
 	struct Hit {
 		float t;
@@ -136,11 +137,11 @@ const char *fragmentSource = R"(
 			float sqrt_discr = sqrt(discr);
 			float t1 = (-b + sqrt_discr) / 2.0f / a;
 			vec3 p = ray.start + ray.dir * t1;
-			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t1 = -1.0f;			
+			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> maxObjectSize) t1 = -1.0f;			
 			float t2 = (-b - sqrt_discr) / 2.0f / a;
 			p = ray.start + ray.dir * t2;
 			
-			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> 0.3f) t2 = -1.0f;
+			if(sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z,2) )> maxObjectSize) t2 = -1.0f;
 			if(t2 > 0 && (t2 < t1 || t1 < 0)) t1 = t2;
 			if(t1 > 0 && (t1 < hit.t || hit.t < 0)) {
 				hit.t = t1;
@@ -270,7 +271,7 @@ GPUProgram gpuProgram;
 
 struct Camera {
 	vec3 eye, lookat, right, pvup, rvup;
-	float fov = 45 * (float)M_PI / 180;
+	float fov = 60 * (float)M_PI / 180;
 
 	Camera() : eye(0, 1, 1), pvup(0, 0, 1), lookat(0, 0, 0) { set(); }
 	void set() {
