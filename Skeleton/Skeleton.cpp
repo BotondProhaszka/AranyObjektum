@@ -289,10 +289,6 @@ struct Camera {
 		eye = normalize(eye + right * step) * length(eye);
 		set();
 	}
-	void StepUp(float step) {
-		eye = normalize(eye + rvup * step) * length(eye);
-		set();
-	}
 };
 
 GPUProgram shader;
@@ -328,7 +324,7 @@ void onInitialization() {
 	shader.setUniform(vec3(0.4f, 0.4f, 0.4f), "kd");
 	shader.setUniform(vec3(1, 1, 1), "ks");
 	shader.setUniform(vec3(F(0.17, 3.1), F(0.35, 2.7), F(1.5, 1.9)), "F0");
-	printf("Usage:\na: Step left\nd: Step right\nw: Step up\ns: Step down\ne: Enable animation\n");
+	printf("Usage:\na: Step left\nd: Step right\ne: Enable animation\n");
 }
 
 void onDisplay() {
@@ -346,8 +342,6 @@ void onDisplay() {
 void onKeyboard(unsigned char key, int pX, int pY) {
 	if (key == 'd') camera.Step(0.1f);
 	if (key == 'a') camera.Step(-0.1f);
-	if (key == 'w') camera.StepUp(0.1f);
-	if (key == 's') camera.StepUp(-0.1f);
 	if (key == 'e') animate = !animate;
 }
 
