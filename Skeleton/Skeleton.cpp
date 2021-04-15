@@ -157,7 +157,7 @@ const char *fragmentSource = R"(
 		float a = A * pow(ray.dir.x, 2) + B * pow(ray.dir.y, 2);
 		float b = 2 * A * ray.start.x * ray.dir.x + 2 * B * ray.start.y * ray.dir.y - C * ray.dir.z;
 		float c = A * pow(ray.start.x, 2) + B * pow(ray.start.y, 2) - C * ray.start.z;
-		hit = solveQuadratic(a, b, c, ray, hit, 0.6f);
+		hit = solveQuadratic(a, b, c, ray, hit, 2 * maxObjectSize);
 		
 		return hit;
 	}
@@ -271,7 +271,7 @@ GPUProgram gpuProgram;
 
 struct Camera {
 	vec3 eye, lookat, right, pvup, rvup;
-	float fov = 60 * (float)M_PI / 180;
+	float fov = 45 * (float)M_PI / 180;
 
 	Camera() : eye(0, 1, 1), pvup(0, 0, 1), lookat(0, 0, 0) { set(); }
 	void set() {
