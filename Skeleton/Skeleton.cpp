@@ -1,19 +1,3 @@
-//=============================================================================================
-// A beadott program csak ebben a fajlban lehet, a fajl 1 byte-os ASCII karaktereket tartalmazhat, BOM kihuzando.
-// Tilos:
-// - mast "beincludolni", illetve mas konyvtarat hasznalni
-// - faljmuveleteket vegezni a printf-et kiveve
-// - Mashonnan atvett programresszleteket forrasmegjeloles nelkul felhasznalni es
-// - felesleges programsorokat a beadott programban hagyni!!!!!!! 
-// - felesleges kommenteket a beadott programba irni a forrasmegjelolest kommentjeit kiveve
-// ---------------------------------------------------------------------------------------------
-// A feladatot ANSI C++ nyelvu forditoprogrammal ellenorizzuk, a Visual Studio-hoz kepesti elteresekrol
-// es a leggyakoribb hibakrol (pl. ideiglenes objektumot nem lehet referencia tipusnak ertekul adni)
-// a hazibeado portal ad egy osszefoglalot.
-// ---------------------------------------------------------------------------------------------
-// A feladatmegoldasokban csak olyan OpenGL fuggvenyek hasznalhatok, amelyek az oran a feladatkiadasig elhangzottak 
-// A keretben nem szereplo GLUT fuggvenyek tiltottak.
-//
 // NYILATKOZAT
 // ---------------------------------------------------------------------------------------------
 // Nev    : Prohászka Botond Bendegúz
@@ -183,26 +167,11 @@ void setUpRotationMatrix(float angle, vec3 vector)
     float u2 = u * u;
     float v2 = v * v;
     float w2 = w * w; 
- 
-    rotationMatrix[0][0] = (u2 + (v2 + w2) * cos(angle)) / L;
-    rotationMatrix[0][1] = (u * v * (1 - cos(angle)) - w * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[0][2] = (u * w * (1 - cos(angle)) + v * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[0][3] = 0.0; 
- 
-    rotationMatrix[1][0] = (u * v * (1 - cos(angle)) + w * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[1][1] = (v2 + (u2 + w2) * cos(angle)) / L;
-    rotationMatrix[1][2] = (v * w * (1 - cos(angle)) - u * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[1][3] = 0.0; 
- 
-    rotationMatrix[2][0] = (u * w * (1 - cos(angle)) - v * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[2][1] = (v * w * (1 - cos(angle)) + u * sqrt(L) * sin(angle)) / L;
-    rotationMatrix[2][2] = (w2 + (u2 + v2) * cos(angle)) / L;
-    rotationMatrix[2][3] = 0.0; 
- 
-    rotationMatrix[3][0] = 0.0;
-    rotationMatrix[3][1] = 0.0;
-    rotationMatrix[3][2] = 0.0;
-    rotationMatrix[3][3] = 1.0;
+	//followtutorials.com/2012/03/3d-rotation-algorithm-about-arbitrary-axis-with-c-c-code.html
+    rotationMatrix[0][0] = (u2 + (v2 + w2) * cos(angle)) / L; rotationMatrix[0][1] = (u * v * (1 - cos(angle)) - w * sqrt(L) * sin(angle)) / L; rotationMatrix[0][2] = (u * w * (1 - cos(angle)) + v * sqrt(L) * sin(angle)) / L; rotationMatrix[0][3] = 0.0; 
+    rotationMatrix[1][0] = (u * v * (1 - cos(angle)) + w * sqrt(L) * sin(angle)) / L; rotationMatrix[1][1] = (v2 + (u2 + w2) * cos(angle)) / L; rotationMatrix[1][2] = (v * w * (1 - cos(angle)) - u * sqrt(L) * sin(angle)) / L; rotationMatrix[1][3] = 0.0; 
+    rotationMatrix[2][0] = (u * w * (1 - cos(angle)) - v * sqrt(L) * sin(angle)) / L; rotationMatrix[2][1] = (v * w * (1 - cos(angle)) + u * sqrt(L) * sin(angle)) / L; rotationMatrix[2][2] = (w2 + (u2 + v2) * cos(angle)) / L; rotationMatrix[2][3] = 0.0; 
+    rotationMatrix[3][0] = 0.0; rotationMatrix[3][1] = 0.0; rotationMatrix[3][2] = 0.0; rotationMatrix[3][3] = 1.0;
 }
 
 vec3 Rotate(vec3 points, vec3 v, float s){
